@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LASVOLTA · prototipi</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{min-height:100%;background:#070a14;}
+  body{font-family:-apple-system,system-ui,Segoe UI,sans-serif;color:#fff;display:flex;flex-direction:column;align-items:center;gap:18px;padding:42px 22px;text-align:center;}
+  .title{font-size:40px;font-weight:800;letter-spacing:7px;background:linear-gradient(135deg,#5ad1ff,#9b8cff,#ff8ccf);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .sub{font-size:13px;letter-spacing:3px;color:rgba(255,255,255,.5);margin-top:-10px;}
+  .games{display:flex;flex-direction:column;gap:14px;width:320px;max-width:92vw;margin-top:10px;}
+  a.game{display:block;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);border-radius:18px;padding:18px 20px;transition:transform .1s;}
+  a.game:active{transform:scale(.97);}
+  .gn{font-size:22px;font-weight:800;letter-spacing:4px;}
+  .gd{font-size:13px;color:rgba(255,255,255,.65);margin-top:5px;line-height:1.5;}
+  .orbit2 .gn{background:linear-gradient(135deg,#5ad1ff,#9b8cff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .orbit .gn{background:linear-gradient(135deg,#7cffb2,#5ad1ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .tune .gn{background:linear-gradient(135deg,#7cffb2,#9b8cff);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .spread .gn{background:linear-gradient(135deg,#ffd36b,#ff8ccf);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .note{font-size:11px;color:rgba(255,255,255,.4);max-width:320px;line-height:1.6;margin-top:14px;}
+</style>
+</head>
+<body>
+  <div class="title">LASVOLTA</div>
+  <div class="sub">PROTOTIPI · GIOCA COL DITO</div>
+  <div class="games">
+    <a class="game orbit2" href="orbit2.html"><div class="gn">ORBIT · ANELLI</div><div class="gd">3 orbite, un dito: tocca per invertire, sul ponte che brilla per cambiare orbita</div></a>
+    <a class="game orbit" href="orbit.html"><div class="gn">ORBIT</div><div class="gd">un punto orbita: tocca per invertire, raccogli le gemme, evita le punte</div></a>
+    <a class="game tune" href="tune.html"><div class="gn">TUNE</div><div class="gd">ruota gli anelli e porta ogni pallino sul suo bersaglio</div></a>
+    <a class="game spread" href="spread.html"><div class="gn">SPREAD</div><div class="gd">tocca e il colore si espande: copri tutto con meno semi che puoi</div></a>
+  </div>
+  <div class="note">Prototipo in prova — raccoglie statistiche di gioco anonime (nessun dato personale). I progressi restano sul tuo telefono.</div>
+</body>
+</html>
