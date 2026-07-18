@@ -9,7 +9,7 @@
 "use strict";
 
 // Set this to the Apps Script Web App URL to enable auto-send (empty = queue only, no network).
-const ENDPOINT='';
+const ENDPOINT='https://script.google.com/macros/s/AKfycbxkFJufeCndcMQSeLJHOctE11_BTUXhq-MfDmeL9bqGrL6wN90Zezs863-bJ0jsnSqonQ/exec';
 
 const TESTER_KEY='lvt_tester_v1';
 const QUEUE_CAP=400;    // oldest events are dropped past this (agg stays correct: it's updated on add)

@@ -118,7 +118,7 @@ function dayNum(){ return Math.floor(Date.now()/86400000); }
 let streakBonus=0;(function(){const d=dayNum(); if(save.lastDay==null){save.streak=1;save.lastDay=d;} else if(d===save.lastDay){} else if(d===save.lastDay+1){save.streak++;save.lastDay=d;save.coins+=20;streakBonus=20;} else {save.streak=1;save.lastDay=d;} persist();})();
 
 /* playtest telemetry: auto-send to the collector (offline-safe queue), 📤 manual export as fallback */
-const BUILD=1;
+const BUILD=2;
 const TM=LvtTelemetry.create({game:'orbit2',build:BUILD,storage:localStorage});
 const tmSend=LvtTelemetry.makeSender(LvtTelemetry.ENDPOINT);
 let runT0=0;
