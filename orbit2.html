@@ -88,6 +88,7 @@
   <div id="chest">🧰</div><div id="chest-label"></div><div id="win-levelup"></div>
   <button class="btn primary hidden" id="b-next" style="margin-top:6px;">CONTINUA</button>
   <button class="btn small hidden" id="b-share" style="margin-top:4px;">CONDIVIDI</button>
+  <button class="btn small hidden" id="b-win-menu" style="margin-top:2px;">MENU</button>
 </div>
 
 <div class="scr hidden ov" id="fail">
@@ -118,14 +119,15 @@ function dayNum(){ return Math.floor(Date.now()/86400000); }
 let streakBonus=0;(function(){const d=dayNum(); if(save.lastDay==null){save.streak=1;save.lastDay=d;} else if(d===save.lastDay){} else if(d===save.lastDay+1){save.streak++;save.lastDay=d;save.coins+=20;streakBonus=20;} else {save.streak=1;save.lastDay=d;} persist();})();
 
 /* playtest telemetry: auto-send to the collector (offline-safe queue), 📤 manual export as fallback */
-const BUILD=2;
+const BUILD=3;
 const TM=LvtTelemetry.create({game:'orbit2',build:BUILD,storage:localStorage});
 const tmSend=LvtTelemetry.makeSender(LvtTelemetry.ENDPOINT);
-let runT0=0;
-function tmRun(){ runT0=Date.now(); TM.event('run_start',{mode:G.mode,level:G.level},runT0); }
-function tmEnd(outcome){ TM.event('run_end',{mode:G.mode,level:G.level,score:G.points,stars:outcome==='win'?G.lastStars:0,dur:Date.now()-runT0,outcome:outcome},Date.now()); TM.flush(tmSend); }
+let runT0=0,firstTap=false,runEnded=true;
+function tmRun(){ runT0=Date.now(); firstTap=false; runEnded=false; TM.event('run_start',{mode:G.mode,level:G.level},runT0); }
+function tmEnd(outcome){ if(runEnded)return; runEnded=true; TM.event('run_end',{mode:G.mode,level:G.level,score:G.points,stars:outcome==='win'?G.lastStars:0,dur:Date.now()-runT0,outcome:outcome},Date.now()); TM.flush(tmSend); }
 TM.event('session_start',null,Date.now()); TM.flush(tmSend);
 addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') TM.flush(tmSend); });
+addEventListener('pagehide',()=>{ if(screen==='game'&&G.state==='play')tmEnd('quit'); else TM.flush(tmSend); });   // leaving mid-run = abandon
 
 const THEMES={
   nebula:{name:'Nebula',bg:'#070a14',ring:'#2a3a66',gem:'#5ad1ff',gold:'#ffd36b',spike:'#ff5a6e',player:'#7cffb2',unlock:1},
@@ -167,6 +169,7 @@ function tutGo(){ $('intro').classList.add('hidden'); G.combo=0;G.comboT=0;G.poi
 
 /* input: tap anywhere reverses */
 function doTap(){ if(screen!=='game'||G.state!=='play')return; initAudio();
+  if(!firstTap){ firstTap=true; TM.event('first_input',{mode:G.mode,level:G.level,dur:Date.now()-runT0},Date.now()); }   // time-to-first-tap: proxy for "capisce senza spiegazioni"
   let near=false; for(const it of orb.items){ if(it.type==='spike'&&it.ring===orb.ring){ const f=ENG.mod2(orb.dir*(it.a-orb.angle)); if(f>1e-4&&f<0.30){near=true;break;} } }
   const act=orb.tap();
   if(act==='cross'){ tone(520,0.12,0.07); buzz([0,15]); }
@@ -199,14 +202,14 @@ function win(){ G.state='win'; G.lastStars=orb.stars(); G.goldGotAtWin=orb.golde
   const plA=plevel(); G.leveledUp=plA>plB; G.newTheme=null; if(G.leveledUp){ for(const k in THEMES){ if(THEMES[k].unlock>plB&&THEMES[k].unlock<=plA)G.newTheme=THEMES[k].name; } }
   for(let i=0;i<70;i++){const a=Math.random()*7,v=1+Math.random()*3.2; bursts.push({x:cx,y:cy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,color:i%2?theme().gem:theme().gold});}
   buzz([0,40,50,80]); persist(); tmEnd('win'); showWin(); }
-function showWin(){ const o=$('win'); o.classList.remove('hidden'); $('win-stars').textContent=''; $('win-eff').textContent=''; $('chest').textContent='🧰'; $('chest-label').textContent=''; $('win-levelup').textContent=''; $('b-next').classList.add('hidden'); $('b-share').classList.add('hidden');
+function showWin(){ const o=$('win'); o.classList.remove('hidden'); $('win-stars').textContent=''; $('win-eff').textContent=''; $('chest').textContent='🧰'; $('chest-label').textContent=''; $('win-levelup').textContent=''; $('b-next').classList.add('hidden'); $('b-share').classList.add('hidden'); $('b-win-menu').classList.add('hidden');
   $('win-title').textContent=G.mode==='daily'?'sfida del giorno!':'livello '+G.level+' completato';
   setTimeout(()=>{ $('win-stars').textContent='★★★☆☆☆'.substr(3-G.lastStars,3); tone(523,0.5,0.12); buzz(30); },300);
   if(G.lastStars===3) setTimeout(perfectCelebration,560);
   setTimeout(()=>{ $('win-eff').textContent='gemme d\'oro: '+G.goldGotAtWin+'/'+G.goldTotAtWin+(G.lastStars===3?' · 🏆 PERFETTO!':'')+'  ·  +'+G.score+' punti'; tone(659,0.4,0.1); },1150); setTimeout(openChest,2050); }
 function openChest(){ const roll=Math.random(); let mult=1,lab=''; if(roll>0.92){mult=4;lab='✦ SCRIGNO D\'ORO ✦';$('chest').textContent='💎';buzz([0,40,60,90]);} else if(roll>0.78){mult=2;lab='scrigno raro!';$('chest').textContent='🎁';} else if(roll>0.64){lab='…quasi raro';}
   const reward=Math.round((14+G.lastStars*6)*mult); save.coins+=reward; persist(); let sh=0,step=Math.max(1,Math.round(reward/22));
-  const iv=setInterval(()=>{ sh=Math.min(reward,sh+step); $('chest-label').textContent=(lab?lab+'  ':'')+'+'+sh+' ◎'; updateHud(); if(sh>=reward){clearInterval(iv); if(mult>=2){for(let i=0;i<55;i++){const a=Math.random()*7;bursts.push({x:cx,y:cy*0.76,vx:Math.cos(a)*(1+Math.random()*3),vy:Math.sin(a)*(1+Math.random()*3),life:1,color:'#ffd36b'});}} if(G.leveledUp)$('win-levelup').textContent='⬆ Livello giocatore '+plevel()+(G.newTheme?' · nuovo tema: '+G.newTheme+' 🎨':''); $('b-next').classList.remove('hidden'); $('b-share').classList.remove('hidden'); } },35); }
+  const iv=setInterval(()=>{ sh=Math.min(reward,sh+step); $('chest-label').textContent=(lab?lab+'  ':'')+'+'+sh+' ◎'; updateHud(); if(sh>=reward){clearInterval(iv); if(mult>=2){for(let i=0;i<55;i++){const a=Math.random()*7;bursts.push({x:cx,y:cy*0.76,vx:Math.cos(a)*(1+Math.random()*3),vy:Math.sin(a)*(1+Math.random()*3),life:1,color:'#ffd36b'});}} if(G.leveledUp)$('win-levelup').textContent='⬆ Livello giocatore '+plevel()+(G.newTheme?' · nuovo tema: '+G.newTheme+' 🎨':''); $('b-next').classList.remove('hidden'); $('b-share').classList.remove('hidden'); $('b-win-menu').classList.remove('hidden'); } },35); }
 function perfectCelebration(){ const e=$('perfect'); e.classList.add('show'); for(let k=0;k<110;k++){const a=Math.random()*7,v=1+Math.random()*4.5;bursts.push({x:cx,y:cy*0.82,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:1,color:k%2?'#ffd36b':theme().gem});} [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,0.5,0.13),i*120)); buzz([0,40,40,60,40,100]); setTimeout(()=>e.classList.remove('show'),2000); }
 function advance(){ $('win').classList.add('hidden'); $('b-share').classList.add('hidden'); if(G.mode==='tutorial'){ save.tutDone=true; persist(); startLevels(); return; } if(G.mode==='daily'){ show('menu'); return; } G.level++; startLevels2(); }
 function startLevels2(){ orb.build(G.level,G.rng,save.dda||0); orb.target=ENG.config(Math.max(1,G.level+(save.dda||0))).target; G.combo=0;G.comboT=0;G.points=0;G.x2T=0;G.slowT=0;$('combo').style.opacity=0; G.state='play'; tmRun(); show('game'); updateHud(); maybeCoach(); }
@@ -222,6 +225,7 @@ $('b-help').onclick=startTutorial; $('b-intro').onclick=tutGo;
 $('b-daily').onclick=startDaily; $('b-zen').onclick=startZen; $('b-shop').onclick=()=>show('shop'); $('b-shop-back').onclick=()=>show('menu');
 $('b-sound').onclick=()=>{save.sound=!save.sound;persist();updateMenu();initAudio();};
 $('b-next').onclick=advance; $('b-share').onclick=shareResult; $('g-back').onclick=()=>{if(G.state==='play')tmEnd('quit');G.state='idle';show('menu');};
+$('b-win-menu').onclick=()=>{G.state='idle';show('menu');};
 $('b-export').onclick=()=>{ const s=TM.exportString(); TM.flush(tmSend); const b=$('b-export');
   const done=()=>{ b.textContent='✓'; setTimeout(()=>{b.textContent='📤';},1500); };
   if(navigator.share){ navigator.share({text:s}).then(done).catch(()=>{}); }
